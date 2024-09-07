@@ -12,41 +12,41 @@ set -euo pipefail
 # gatk needs to be included in $PATH (v4.1.9.0; https://gatk.broadinstitute.org/hc/en-us)
 
 ## Command-line args:
-REFERENCE=$1
-BWA=$2
-BWA_INDEX=$3
-SAMTOOLS=$4
-GATK=$5
+reference=$1
+bwa=$2
+bwa_index=$3
+samtools=$4
+gatk=$5
 
 ## Report:
 echo -e "\n\n###################################################################"
 date
 echo -e "#### indexing.sh: Starting script."
-echo -e "#### indexing.sh: Reference genome: $REFERENCE"
-echo -e "#### indexing.sh: Index with BWA: $NT"
-[[ $BWA ]] && echo -e "#### indexing.sh: Name for BWA index file: $BWA_INDEX"
-echo -e "#### indexing.sh: Index with SAMtools: $SAMTOOLS"
-echo -e "#### indexing.sh: Index with GATK (Picard): $GATK \n\n"
+echo -e "#### indexing.sh: Reference genome: $reference"
+echo -e "#### indexing.sh: Index with BWA: $bwa"
+[[ $bwa ]] && echo -e "#### indexing.sh: Name for BWA index file: $bwa_index"
+echo -e "#### indexing.sh: Index with SAMtools: $samtools"
+echo -e "#### indexing.sh: Index with GATK (Picard): $gatk \n\n"
 
 ################################################################################
 #### CREATE INDICES ####
 ################################################################################
-cd $(dirname $REFERENCE)
+cd $(dirname $reference)
 
 ## Index with BWA
-[[ $BWA ]] && echo -e "#### indexing.sh: Creating index of $REFERENCE with BWA ...\n" && bwa index -p $BWA_INDEX -a bwtsw $REFERENCE
+[[ $bwa ]] && echo -e "#### indexing.sh: Creating index of $reference with BWA ...\n" && bwa index -p $bwa_index -a bwtsw $reference
 
 ## Index with SAMtools
-[[ $SAMTOOLS ]] && echo -e "#### indexing.sh: Creating index of $REFERENCE with SAMtools ...\n" && samtools faidx $REFERENCE
+[[ $samtools ]] && echo -e "#### indexing.sh: Creating index of $reference with SAMtools ...\n" && samtools faidx $reference
 
 ## Index with GATK (Picard)
-if [[ $GATK ]]
+if [[ $gatk ]]
 then
-	echo -e "#### indexing.sh: Creating index of $REFERENCE with GATK (Picard) ...\n"
-	gatk CreateSequenceDictionary -R $REFERENCE -O $REFERENCE.dict
-	OLDNAME=${REFERENCE}.dict
-	NEWNAME="${OLDNAME/fna.dict/dict}"
-	cp $OLDNAME $NEWNAME
+	echo -e "#### indexing.sh: Creating index of $reference with GATK (Picard) ...\n"
+	gatk CreateSequenceDictionary -R $reference -O $reference.dict
+	oldname=${reference}.dict
+	newname="${oldname/fna.dict/dict}"
+	cp $oldname $newname
 fi
 
 ## Report:

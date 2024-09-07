@@ -1,23 +1,23 @@
 ################################################################################
 #### GENOTYPE CALLING WITH STACKS####
 ################################################################################
-SCRIPTS_DIR=/home/nibtve93/scripts/stacks
+scripts_dir=/home/nibtve93/scripts/stacks
 
-NT=16
+nt=16
 
-SET_ID=lehilahytsara
-BAM_DIR=$PWORK/bamFiles/$SET_ID
-OUT_DIR=$PWORK/$SET_ID/stacks
-POPMAP=$OUT_DIR/$SET_ID.popmap # List of samples included in genotyping
-SUFFIX=auto	# Suffix for final BAM files (see scripts for reference mapping)
+set_id=lehilahytsara
+bam_dir=$PWORK/bamFiles/$set_id
+out_dir=$PWORK/$set_id/stacks
+popmap=$out_dir/$set_id.popmap # List of samples included in genotyping
+suffix=auto	# Suffix for final BAM files (see scripts for reference mapping)
 
-mkdir -p $OUT_DIR/logFiles
-mkdir -p $OUT_DIR/populations
+mkdir -p $out_dir/logFiles
+mkdir -p $out_dir/populations
 
 ## Create stacks with gstacks
-sbatch --job-name=stacks --output=$OUT_DIR/logFiles/gstacks.$SET_ID.oe $SCRIPTS_DIR/gstacks.sh $NT $BAM_DIR $OUT_DIR $POPMAP 
+sbatch --job-name=stacks --output=$out_dir/logFiles/gstacks.$set_id.oe $scripts_dir/gstacks.sh $nt $bam_dir $out_dir $popmap 
 
 ## Extract VCF file with populations
-FILTERS="-p 1 -r 0.75"
-OUTPUT="--vcf"
-sbatch --job-name=stacks --dependency=singleton --output=$OUT_DIR/logFiles/populations.$SET_ID.oe $SCRIPTS_DIR/populations.sh $OUT_DIR $OUT_DIR/populations $POPMAP $NT "$FILTERS" "$OUTPUT"
+filters="-p 1 -r 0.75"
+output="--vcf"
+sbatch --job-name=stacks --dependency=singleton --output=$out_dir/logFiles/populations.$set_id.oe $scripts_dir/populations.sh $out_dir $out_dir/populations $popmap $nt "$filters" "$output"

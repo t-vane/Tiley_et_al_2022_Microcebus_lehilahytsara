@@ -8,27 +8,27 @@ set -euo pipefail
 ################################################################################
 
 ## Command-line args:
-SCRIPTS_DIR=$1
-OUT_DIR=$2
-LIKE_VALUES=$3
-IND_FILE=$4
-SET_ID=$5
+scripts_dir=$1
+out_dir=$2
+like_values=$3
+ind_file=$4
+set_id=$5
 
 ## Report:
 echo -e "\n\n###################################################################"
 date
 echo -e "#### plot_ngsadmix.sh: Starting script."
-echo -e "#### plot_ngsadmix.sh: Directory with scripts: $SCRIPTS_DIR"
-echo -e "#### plot_ngsadmix.sh: Output directory: $OUT_DIR"
-echo -e "#### plot_ngsadmix.sh: File with likelihood values: $LIKE_VALUES"
-echo -e "#### plot_ngsadmix.sh: File that maps individuals to populations: $IND_FILE"
-echo -e "#### plot_ngsadmix.sh: Set ID: $SET_ID \n\n"
+echo -e "#### plot_ngsadmix.sh: Directory with scripts: $scripts_dir"
+echo -e "#### plot_ngsadmix.sh: Output directory: $out_dir"
+echo -e "#### plot_ngsadmix.sh: File with likelihood values: $like_values"
+echo -e "#### plot_ngsadmix.sh: File that maps individuals to populations: $ind_file"
+echo -e "#### plot_ngsadmix.sh: Set ID: $set_id \n\n"
 
 ################################################################################
 #### PLOT ADMIXTURE RESULTS ####
 ################################################################################
 echo -e "#### plot_ngsadmix.sh: Running script to plot admixture results ...\n"
-Rscript $SCRIPTS_DIR/plot_ngsadmix.R $OUT_DIR $LIKE_VALUES $IND_FILE $SET_ID
+Rscript $scripts_dir/plot_ngsadmix.R $out_dir $like_values $ind_file $set_id
 
 echo -e "\n#### plot_ngsadmix.sh: Done with script."
 date

@@ -13,117 +13,117 @@ set -euo pipefail
 # BCFtools needs to be included in $PATH (v1.11; http://www.htslib.org/)
 
 ## Command-line args:
-VCF_IN=$1
-VCF_OUT=$2
-MAXMISS_GENO1=$3
-MAXMISS_GENO2=$4
-MAXMISS_GENO3=$5
-FILTER_INDS=$6
-MAXMISS_IND1=$7
-MAXMISS_IND2=$8
-MAXMISS_IND3=$9
+vcf_in=$1
+vcf_out=$2
+maxmiss_geno1=$3
+maxmiss_geno2=$4
+maxmiss_geno3=$5
+filter_inds=$6
+maxmiss_ind1=$7
+maxmiss_ind2=$8
+maxmiss_ind3=$9
 
 ## Report:
 echo -e "\n\n###################################################################"
 date
 echo -e "#### 02_filter_missing-1.sh: Starting script."
-echo -e "#### 02_filter_missing-1.sh: Input VCF: $VCF_IN"
-echo -e "#### 02_filter_missing-1.sh: Output VCF: $VCF_OUT"
-echo -e "#### 02_filter_missing-1.sh: Maximum missingness value for genotypes (round 1): $MAXMISS_GENO1"
-echo -e "#### 02_filter_missing-1.sh: Maximum missingness value for genotypes (round 2): $MAXMISS_GENO2"
-echo -e "#### 02_filter_missing-1.sh: Maximum missingness value for genotypes (round 3): $MAXMISS_GENO3"
+echo -e "#### 02_filter_missing-1.sh: Input VCF: $vcf_in"
+echo -e "#### 02_filter_missing-1.sh: Output VCF: $vcf_out"
+echo -e "#### 02_filter_missing-1.sh: Maximum missingness value for genotypes (round 1): $maxmiss_geno1"
+echo -e "#### 02_filter_missing-1.sh: Maximum missingness value for genotypes (round 2): $maxmiss_geno2"
+echo -e "#### 02_filter_missing-1.sh: Maximum missingness value for genotypes (round 3): $maxmiss_geno3"
 echo -e "#### 02_filter_missing-1.sh: NOTE: Maximum missingness is inverted for genotypes, with a value of 1 indicating no missing data (this is how the '--max-missing' option in VCFtools works)."
-echo -e "#### 02_filter_missing-1.sh: Filter individuals: $FILTER_INDS"
-[[ $FILTER_IND ]] && echo -e "#### 02_filter_missing-1.sh: Maximum missingness value for individuals (round 1): $MAXMISS_IND1"
-[[ $FILTER_IND ]] && echo -e "#### 02_filter_missing-1.sh: Maximum missingness value for individuals (round 2): $MAXMISS_IND2"
-[[ $FILTER_IND ]] && echo -e "#### 02_filter_missing-1.sh: Maximum missingness value for individuals (round 3): $MAXMISS_IND3 \n\n"
+echo -e "#### 02_filter_missing-1.sh: Filter individuals: $filter_inds"
+[[ $filter_inds ]] && echo -e "#### 02_filter_missing-1.sh: Maximum missingness value for individuals (round 1): $maxmiss_ind1"
+[[ $filter_inds ]] && echo -e "#### 02_filter_missing-1.sh: Maximum missingness value for individuals (round 2): $maxmiss_ind2"
+[[ $filter_inds ]] && echo -e "#### 02_filter_missing-1.sh: Maximum missingness value for individuals (round 3): $maxmiss_ind3 \n\n"
 
 ################################################################################
 #### FILTER FOR MISSINGNESS PER GENOTYPE (AND INDIVIDUAL) ####
 ################################################################################
 ## Estimate number of indidviduals in input
-echo -e "#### 02_filter_missing-1.sh: Estimating number of individuals in $VCF_IN ...\n"
-NIND_IN=$(bcftools query -l $VCF_IN | wc -l || true)
+echo -e "#### 02_filter_missing-1.sh: Estimating number of individuals in $vcf_in ...\n"
+nind_in=$(bcftools query -l $vcf_in | wc -l || true)
 
 ## Create temporary filter files
-mkdir -p $(dirname $VCF_OUT)/tmp
-FILTERFILE_PREFIX=$(dirname $VCF_OUT)/tmp/filterfile.$RANDOM
-VCF_TMP_PREFIX=$(dirname $VCF_OUT)/tmp/vcf.$RANDOM
+mkdir -p $(dirname $vcf_out)/tmp
+filterfile_prefix=$(dirname $vcf_out)/tmp/filterfile.$RANDOM
+vcf_tmp_prefix=$(dirname $vcf_out)/tmp/vcf.$RANDOM
 
 ## Run filtering
-if [[ $FILTER_INDS ]]
+if [[ $filter_inds ]]
 then
 	echo -e "#### 02_filter_missing-1.sh: Filtering by missing data at genotype and individual level in three rounds ...\n"
 	for i in 1 2 3 
 	do
-		[[ $i == 1 ]] && MAXMISS_GENO=$MAXMISS_GENO1 && MAXMISS_IND=$MAXMISS_IND1
-		[[ $i == 2 ]] && MAXMISS_GENO=$MAXMISS_GENO2 && MAXMISS_IND=$MAXMISS_IND2
-		[[ $i == 3 ]] && MAXMISS_GENO=$MAXMISS_GENO3 && MAXMISS_IND=$MAXMISS_IND3
+		[[ $i == 1 ]] && maxmiss_geno=$maxmiss_geno1 && maxmiss_ind=$maxmiss_ind1
+		[[ $i == 2 ]] && maxmiss_geno=$maxmiss_geno2 && maxmiss_ind=$maxmiss_ind2
+		[[ $i == 3 ]] && maxmiss_geno=$maxmiss_geno3 && maxmiss_ind=$maxmiss_ind3
 		
 		echo -e "## 02_filter_missing-1.sh: Filtering genotypes by missing data - round $i ..."
-		vcftools --vcf $VCF_IN --max-non-ref-af 0.99 --min-alleles 2 --max-missing $MAXMISS_GENO --recode --recode-INFO-all --stdout > $VCF_TMP_PREFIX.R${i}a.vcf
+		vcftools --vcf $vcf_in --max-non-ref-af 0.99 --min-alleles 2 --max-missing $maxmiss_geno --recode --recode-INFO-all --stdout > $vcf_tmp_prefix.R${i}a.vcf
 		
 		echo -e "## 02_filter_missing-1.sh: Filtering individuals by missing data - round $i ..."
 		# Get amount of missing data per individual
-		vcftools --vcf $VCF_TMP_PREFIX.R${i}a.vcf --missing-indv --stdout > $FILTERFILE_PREFIX.round$i.imiss
+		vcftools --vcf $vcf_tmp_prefix.R${i}a.vcf --missing-indv --stdout > $filterfile_prefix.round$i.imiss
 		# Get list of individuals with too much missing data
-		tail -n +2 $FILTERFILE_PREFIX.round$i.imiss | awk -v var=$MAXMISS_IND '$5 > var' | cut -f1 > $FILTERFILE_PREFIX.HiMissInds$i
+		tail -n +2 $filterfile_prefix.round$i.imiss | awk -v var=$maxmiss_ind '$5 > var' | cut -f1 > $filterfile_prefix.HiMissInds$i
 		# Remove individuals with too much missing data
-		vcftools --vcf $VCF_TMP_PREFIX.R${i}a.vcf --remove $FILTERFILE_PREFIX.HiMissInds$i --recode --recode-INFO-all --stdout > $VCF_TMP_PREFIX.R${i}b.vcf
-		[[ $i == 3 ]] && mv $VCF_TMP_PREFIX.R${i}b.vcf $VCF_OUT		
+		vcftools --vcf $vcf_tmp_prefix.R${i}a.vcf --remove $filterfile_prefix.HiMissInds$i --recode --recode-INFO-all --stdout > $vcf_tmp_prefix.R${i}b.vcf
+		[[ $i == 3 ]] && mv $vcf_tmp_prefix.R${i}b.vcf $vcf_out		
 	done
 	
 	##Report:
-	NVAR_IN=$(grep -cv "^#" $VCF_IN || true)
-	NVAR_OUT=$(grep -cv "^#" $VCF_OUT || true)
+	nvar_in=$(grep -cv "^#" $vcf_in || true)
+	nvar_out=$(grep -cv "^#" $vcf_out || true)
 	
-	NVAR_R1=$(grep -cv "^#" $VCF_TMP_PREFIX.R1a.vcf || true)
-	NVAR_R2=$(grep -cv "^#" $VCF_TMP_PREFIX.R2a.vcf || true)
-	NVAR_R3=$(grep -cv "^#" $VCF_TMP_PREFIX.R3a.vcf || true)
+	nvar_r1=$(grep -cv "^#" $vcf_tmp_prefix.R1a.vcf || true)
+	nvar_r2=$(grep -cv "^#" $vcf_tmp_prefix.R2a.vcf || true)
+	nvar_r3=$(grep -cv "^#" $vcf_tmp_prefix.R3a.vcf || true)
 	
-	NVAR_FILT_R1=$(( $NVAR_IN - $NVAR_R1 ))
-	NVAR_FILT_R2=$(( $NVAR_IN - $NVAR_R2 ))
-	NVAR_FILT_R3=$(( $NVAR_IN - $NVAR_R3 ))
+	nvar_filt_r1=$(( $nvar_in - $nvar_r1 ))
+	nvar_filt_r2=$(( $nvar_in - $nvar_r2 ))
+	nvar_filt_r3=$(( $nvar_in - $nvar_r3 ))
 	
-	NIND_FILT_R1=$(wc -l < $FILTERFILE_PREFIX.HiMissInds1 || true)
-	NIND_FILT_R2=$(wc -l < $FILTERFILE_PREFIX.HiMissInds2 || true)
-	NIND_FILT_R3=$(wc -l < $FILTERFILE_PREFIX.HiMissInds3 || true)
+	nind_filt_r1=$(wc -l < $filterfile_prefix.HiMissInds1 || true)
+	nind_filt_r2=$(wc -l < $filterfile_prefix.HiMissInds2 || true)
+	nind_filt_r3=$(wc -l < $filterfile_prefix.HiMissInds3 || true)
 	
-	NIND_OUT=$(bcftools query -l $VCF_OUT | wc -l || true)
+	nind_out=$(bcftools query -l $vcf_out | wc -l || true)
 	
-	echo -e "\n#### 02_filter_missing-1.sh: Number of indidviduals before individual filtering: $NIND_IN"
-	echo -e "#### 02_filter_missing-1.sh: Number of indidviduals filtered in round 1: $NIND_FILT_R1"
-	echo -e "#### 02_filter_missing-1.sh: Number of indidviduals filtered in round 2: $NIND_FILT_R2"
-	echo -e "#### 02_filter_missing-1.sh: Number of indidviduals filtered in round 3: $NIND_FILT_R3"
-	echo -e "#### 02_filter_missing-1.sh: Number of indidviduals left after individual filtering: $NIND_OUT \n"
+	echo -e "\n#### 02_filter_missing-1.sh: Number of indidviduals before individual filtering: $nind_in"
+	echo -e "#### 02_filter_missing-1.sh: Number of indidviduals filtered in round 1: $nind_filt_r1"
+	echo -e "#### 02_filter_missing-1.sh: Number of indidviduals filtered in round 2: $nind_filt_r2"
+	echo -e "#### 02_filter_missing-1.sh: Number of indidviduals filtered in round 3: $nind_filt_r3"
+	echo -e "#### 02_filter_missing-1.sh: Number of indidviduals left after individual filtering: $nind_out \n"
 	
-	echo -e "#### 02_filter_missing-1.sh: Number of SNPs before genotype filtering: $NVAR_IN"
-	echo -e "#### 02_filter_missing-1.sh: Number of SNPs filtered in round 1: $NVAR_FILT_R1"
-	echo -e "#### 02_filter_missing-1.sh: Number of SNPs filtered in round 2: $NVAR_FILT_R2"
-	echo -e "#### 02_filter_missing-1.sh: Number of SNPs filtered in round 3: $NVAR_FILT_R3"
-	echo -e "#### 02_filter_missing-1.sh: Number of SNPs left after genotype filtering: $NVAR_OUT"	
+	echo -e "#### 02_filter_missing-1.sh: Number of SNPs before genotype filtering: $nvar_in"
+	echo -e "#### 02_filter_missing-1.sh: Number of SNPs filtered in round 1: $nvar_filt_r1"
+	echo -e "#### 02_filter_missing-1.sh: Number of SNPs filtered in round 2: $nvar_filt_r2"
+	echo -e "#### 02_filter_missing-1.sh: Number of SNPs filtered in round 3: $nvar_filt_r3"
+	echo -e "#### 02_filter_missing-1.sh: Number of SNPs left after genotype filtering: $nvar_out"	
 else
 	echo -e "#### 02_filter_missing-1.sh: Only filtering by missing data at genotype level in a single round (no individuals will be removed) ..."
-	vcftools --vcf $VCF_IN --max-non-ref-af 0.99 --min-alleles 2 --max-missing $MAXMISS_GENO3 --recode --recode-INFO-all --stdout > $VCF_OUT
+	vcftools --vcf $vcf_in --max-non-ref-af 0.99 --min-alleles 2 --max-missing $maxmiss_geno3 --recode --recode-INFO-all --stdout > $vcf_out
 	
 	## Report:
-	NVAR_IN=$(grep -cv "^#" $VCF_IN || true)
-	NVAR_OUT=$(grep -cv "^#" $VCF_OUT || true)
-	NVAR_FILT=$(( $NVAR_IN - $NVAR_OUT ))
+	nvar_in=$(grep -cv "^#" $vcf_in || true)
+	nvar_out=$(grep -cv "^#" $vcf_out || true)
+	nvar_filt=$(( $nvar_in - $nvar_out ))
 	
-	echo -e "\n#### 02_filter_missing-1.sh: Number of SNPs before genotype filtering: $NVAR_IN"
-	echo -e "#### 02_filter_missing-1.sh: Number of SNPs after genotype filtering: $NVAR_OUT"
-	echo -e "#### 02_filter_missing-1.sh: Number of SNPs filtered: $NVAR_FILT"
+	echo -e "\n#### 02_filter_missing-1.sh: Number of SNPs before genotype filtering: $nvar_in"
+	echo -e "#### 02_filter_missing-1.sh: Number of SNPs after genotype filtering: $nvar_out"
+	echo -e "#### 02_filter_missing-1.sh: Number of SNPs filtered: $nvar_filt"
 fi
 
 ## Remove temporary files
-rm $FILTERFILE_PREFIX*
-rm $VCF_TMP_PREFIX*
+rm $filterfile_prefix*
+rm $vcf_tmp_prefix*
 
 ## Report:
 echo -e "\n#### 02_filter_missing-1.sh: Listing output VCF:"
-ls -lh $VCF_OUT
-[[ $(grep -cv "^#" $VCF_OUT) = 0 ]] && echo -e "\n\n#### 02_filter_missing-1.sh: ERROR: VCF is empty\n" >&2 && exit 1
+ls -lh $vcf_out
+[[ $(grep -cv "^#" $vcf_out) = 0 ]] && echo -e "\n\n#### 02_filter_missing-1.sh: ERROR: VCF is empty\n" >&2 && exit 1
 
 echo -e "\n#### 02_filter_missing-1.sh: Done with script."
 date

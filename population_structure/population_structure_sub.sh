@@ -1,13 +1,13 @@
 ################################################################################
 #### POPULATION STRUCTURE ANALYSES ####
 ################################################################################
-SCRIPTS_DIR=/home/nibtve93/scripts/populationStructure
+scripts_dir=/home/nibtve93/scripts/populationStructure
 
-SET_ID=lehilahytsara
-POP_DIR=$PWORK/$SET_ID/populationStructure
-BEAGLE=$PWORK/$SET_ID/angsd/$SET_ID.beagle.gz # Genotype likelihood file created in genotype_likelihoods_sub.sh
+set_id=lehilahytsara
+pop_dir=$PWORK/$set_id/populationStructure
+beagle=$PWORK/$set_id/angsd/$set_id.beagle.gz # Genotype likelihood file created in genotype_likelihoods_sub.sh
 
-mkdir -p $POP_DIR/logFiles
+mkdir -p $pop_dir/logFiles
 
 
 #################################################################
@@ -23,12 +23,12 @@ mkdir -p $POP_DIR/logFiles
 ##################################################
 #### 1.2 GENOTYPE LIKELIHOOD BASED ####
 ##################################################
-mkdir -p $POP_DIR/pca/genotypeLikelihoods
+mkdir -p $pop_dir/pca/genotypeLikelihoods
 
-IND_FILE=$POP_DIR/$SET_ID.txt # File with individual IDs in first column and population assignments in second column
-NT=20
+ind_file=$pop_dir/$set_id.txt # File with individual IDs in first column and population assignments in second column
+nt=20
 
-sbatch --output=$POP_DIR/logFiles/pca.$SET_ID.oe $SCRIPTS_DIR/pca.sh $NT $BEAGLE $POP_DIR/pca/genotypeLikelihoods $SCRIPTS_DIR $IND_FILE $SET_ID
+sbatch --output=$pop_dir/logFiles/pca.$set_id.oe $scripts_dir/pca.sh $nt $beagle $pop_dir/pca/genotypeLikelihoods $scripts_dir $ind_file $set_id
 
 
 #################################################################
@@ -44,43 +44,43 @@ sbatch --output=$POP_DIR/logFiles/pca.$SET_ID.oe $SCRIPTS_DIR/pca.sh $NT $BEAGLE
 ##################################################
 #### 2.2 GENOTYPE LIKELIHOOD BASED ####
 ##################################################
-mkdir -p $POP_DIR/ngsadmix/genotypeLikelihoods
+mkdir -p $pop_dir/ngsadmix/genotypeLikelihoods
 
-CLUSTERS=12 # Maximum number of clusters to assume in admixture analysis
-REPEATS=10 # Number of independent runs
-PERCENTAGE="75/100" # Minimum percentage of represented individuals
-MININD=$(( ($(zcat $BEAGLE | head -1 | wc -w)/3-1) * $PERCENTAGE )) # Minimum number of represented individuals
-NT=80
+clusters=12 # Maximum number of clusters to assume in admixture analysis
+repeats=10 # Number of independent runs
+percentage="75/100" # Minimum percentage of represented individuals
+minind=$(( ($(zcat $beagle | head -1 | wc -w)/3-1) * $percentage )) # Minimum number of represented individuals
+nt=80
 
-## Submit array job to infer individual ancestries for each number of clusters (ranging from 1 to $CLUSTERS), using $REPEATS repetitions 
-for K in $(seq 1 $CLUSTERS)
+## Submit array job to infer individual ancestries for each number of clusters (ranging from 1 to $clusters), using $repeats repetitions 
+for k in $(seq 1 $clusters)
 do
-	JID=$(sbatch --array=1-$REPEATS --output=$POP_DIR/logFiles/ngsadmix$K.$SET_ID.%A_%a.oe $SCRIPTS_DIR/ngsadmix.sh $NT $K $BEAGLE $POP_DIR/ngsadmix/genotypeLikelihoods $MININD $SET_ID)
-	declare RUNID_$K=${JID##* }
+	jid=$(sbatch --array=1-$repeats --output=$pop_dir/logFiles/ngsadmix$k.$set_id.%A_%a.oe $scripts_dir/ngsadmix.sh $nt $k $beagle $pop_dir/ngsadmix/genotypeLikelihoods $minind $set_id)
+	declare RUNID_$k=${jid##* }
 done
 
 
 ## Print likelihood values file
-LIKE_FILE=$POP_DIR/ngsadmix/genotypeLikelihoods/likevalues.$SET_ID.txt # File for likelihoods summary
-rm $LIKE_FILE; touch $LIKE_FILE
-for K in $(seq 1 $CLUSTERS); 
+like_file=$pop_dir/ngsadmix/genotypeLikelihoods/likevalues.$set_id.txt # File for likelihoods summary
+rm $like_file; touch $like_file
+for k in $(seq 1 $clusters); 
 do
-	for SEED in $(seq 1 $REPEATS)
+	for seed in $(seq 1 $repeats)
 	do
-		[[ $K == 1 ]] && [[ $SEED == 1 ]] && VARNAME=RUNID_$K && JID=$(sbatch --account=nib00015 --dependency=afterok:${!VARNAME} --output=$POP_DIR/logFiles/print_likes.$SET_ID.oe $SCRIPTS_DIR/print_likes.sh $POP_DIR/ngsadmix/genotypeLikelihoods/$SET_ID.K$K.seed$SEED.log $LIKE_FILE)
-		[[ $K != 1 ]] || [[ $SEED != 1 ]] && VARNAME=RUNID_$K && JID=$(sbatch --account=nib00015 --dependency=afterok:${!VARNAME}:${JID##* } --output=$POP_DIR/logFiles/print_likes.$SET_ID.oe $SCRIPTS_DIR/print_likes.sh $POP_DIR/ngsadmix/genotypeLikelihoods/$SET_ID.K$K.seed$SEED.log $LIKE_FILE)
+		[[ $k == 1 ]] && [[ $seed == 1 ]] && varname=RUNID_$k && jid=$(sbatch --account=nib00015 --dependency=afterok:${!varname} --output=$pop_dir/logFiles/print_likes.$set_id.oe $scripts_dir/print_likes.sh $pop_dir/ngsadmix/genotypeLikelihoods/$set_id.K$k.seed$seed.log $like_file)
+		[[ $k != 1 ]] || [[ $seed != 1 ]] && varname=RUNID_$k && jid=$(sbatch --account=nib00015 --dependency=afterok:${!varname}:${jid##* } --output=$pop_dir/logFiles/print_likes.$set_id.oe $scripts_dir/print_likes.sh $pop_dir/ngsadmix/genotypeLikelihoods/$set_id.K$k.seed$seed.log $like_file)
 	done
 done
 
 ## Plot results
-IND_FILE=$POP_DIR/$SET_ID.txt # File with individual IDs in first columns and population assignments in second column
+ind_file=$pop_dir/$set_id.txt # File with individual IDs in first columns and population assignments in second column
 
-until [[ $(cat $LIKE_FILE | wc -l) == $(( $CLUSTERS*$REPEATS )) ]]
+until [[ $(cat $like_file | wc -l) == $(( $clusters*$repeats )) ]]
 do
 	sleep 5
 done
 
-sbatch --output=$POP_DIR/logFiles/plot_ngsadmix.$SET_ID.oe $SCRIPTS_DIR/plot_ngsadmix.sh $SCRIPTS_DIR $POP_DIR/ngsadmix/genotypeLikelihoods $LIKE_FILE $IND_FILE $SET_ID
+sbatch --output=$pop_dir/logFiles/plot_ngsadmix.$set_id.oe $scripts_dir/plot_ngsadmix.sh $scripts_dir $pop_dir/ngsadmix/genotypeLikelihoods $like_file $ind_file $set_id
 
 
 #################################################################
@@ -90,67 +90,67 @@ sbatch --output=$POP_DIR/logFiles/plot_ngsadmix.$SET_ID.oe $SCRIPTS_DIR/plot_ngs
 ##################################################
 #### 3.1 GENOTYPE CALL BASED ####
 ##################################################
-mkdir -p $POP_DIR/ibd/genotypeCalls
+mkdir -p $pop_dir/ibd/genotypeCalls
 
-VCF_IN=$PWORK/$SET_ID/vcf/$SET_ID.populations.snps.08filt.vcf.gz # Filtered input VCF without outgroups and undesired individuals created in vcf_filtering_sub.sh
-SAMPLE_FILE=$POP_DIR/ibd/genotypeCalls/$SET_ID.samples.pops.txt # List with indviduals in first column and associated populations in second column, without row or column names
-OUT=$POP_DIR/ibd/genotypeCalls/$SET_ID
+vcf_in=$PWORK/$set_id/vcf/$set_id.populations.snps.08filt.vcf.gz # Filtered input VCF without outgroups and undesired individuals created in vcf_filtering_sub.sh
+sample_file=$pop_dir/ibd/genotypeCalls/$set_id.samples.pops.txt # List with indviduals in first column and associated populations in second column, without row or column names
+out=$pop_dir/ibd/genotypeCalls/$set_id
 
 ## Submit script to infer pairwise F_ST between populations
-sbatch --output=$POP_DIR/logFiles/$SET_ID.hierfstat.oe $SCRIPTS_DIR/hierfstat.sh $SCRIPTS_DIR $VCF_IN $SAMPLE_FILE $OUT
+sbatch --output=$pop_dir/logFiles/$set_id.hierfstat.oe $scripts_dir/hierfstat.sh $scripts_dir $vcf_in $sample_file $out
 
 ## Conduct Mantel tests and plot IBD
-GEO_DIST=$POP_DIR/ibd/genotypeCalls/geo_dist.txt # Distance matrix with mean geographic distances between population pairs as estimated with Geographic Distance Matrix Generator v1.2.3 (https://biodiversityinformatics.amnh.org/open_source/gdmg/), with row and column names
-GEN_DIST=$POP_DIR/ibd/genotypeCalls/gen_dist.txt # Distance matrix with pairwise F_ST between populations as estimated with hierfstat, with row and column names
-sbatch --output=$POP_DIR/logFiles/$SET_ID.genotypeCalls.ibd.oe $SCRIPTS_DIR/ibd.sh $GEO_DIST $GEN_DIST $POP_DIR/ibd/genotypeCalls/$SET_IT
+geo_dist=$pop_dir/ibd/genotypeCalls/geo_dist.txt # Distance matrix with mean geographic distances between population pairs as estimated with Geographic Distance Matrix Generator v1.2.3 (https://biodiversityinformatics.amnh.org/open_source/gdmg/), with row and column names
+gen_dist=$pop_dir/ibd/genotypeCalls/gen_dist.txt # Distance matrix with pairwise F_ST between populations as estimated with hierfstat, with row and column names
+sbatch --output=$pop_dir/logFiles/$set_id.genotypeCalls.ibd.oe $scripts_dir/ibd.sh $geo_dist $gen_dist $pop_dir/ibd/genotypeCalls/$set_id
 
 ##################################################
 #### 3.2 GENOTYPE LIKELIHOOD BASED ####
 ##################################################
-mkdir -p $POP_DIR/ibd/genotypeLikelihoods
+mkdir -p $pop_dir/ibd/genotypeLikelihoods
 
-SAF_DIR=$PWORK/$SET_ID/angsd # Directory with site allele frequency likelihoods for each population inferred in genotype_likelihoods_sub.sh
-POPS="ambavala ambatovy ambohitantely anjanaharibe anjiahely ankafobe marojejy tsinjoarivo"
-NT=24
+saf_dir=$PWORK/$set_id/angsd # Directory with site allele frequency likelihoods for each population inferred in genotype_likelihoods_sub.sh
+pops="ambavala ambatovy ambohitantely anjanaharibe anjiahely ankafobe marojejy tsinjoarivo"
+nt=24
 
 ## Get pairwise population comparisons
-awk -f $SCRIPTS_DIR/combinations.awk <<< $POPS > $POP_DIR/ibd/genotypeLikelihoods/pop_combinations.txt
+awk -f $scripts_dir/combinations.awk <<< $pops > $pop_dir/ibd/genotypeLikelihoods/pop_combinations.txt
 
 ## Initialize summary file
-echo "pair unweighted weighted" > $POP_DIR/ibd/genotypeLikelihoods/$SET_ID.fst_sumstats.txt
+echo "pair unweighted weighted" > $pop_dir/ibd/genotypeLikelihoods/$set_id.fst_sumstats.txt
 
 ## Get pairwise F_ST between populations
 while read combination
 do
-	FIRST=$(awk '{print $1}' <<< $combination)
-	SECOND=$(awk '{print $2}' <<< $combination)
+	first=$(awk '{print $1}' <<< $combination)
+	second=$(awk '{print $2}' <<< $combination)
 	
-	echo -e "#### Processing combination $FIRST $SECOND ...\n"
+	echo -e "#### Processing combination $first $second ...\n"
 	# Estimate joint minor allele frequency spectrum
-	OUT_FILE=$POP_DIR/ibd/genotypeLikelihoods/$SET_ID.$FIRST.$SECOND.ml
-	sbatch --job-name=fst --output=$POP_DIR/logFiles/$SET_ID.realsfs.2d.$FIRST.$SECOND.oe $SCRIPTS_DIR/realsfs.sh $NT "$SAF_DIR/$FIRST.saf.idx $SAF_DIR/$SECOND.saf.idx" $OUT_FILE
+	out_file=$pop_dir/ibd/genotypeLikelihoods/$set_id.$first.$second.ml
+	sbatch --job-name=fst --output=$pop_dir/logFiles/$set_id.realsfs.2d.$first.$second.oe $scripts_dir/realsfs.sh $nt "$saf_dir/$first.saf.idx $saf_dir/$second.saf.idx" $out_file
 	
 	# Estimate F_ST values
-	OUT=$POP_DIR/ibd/genotypeLikelihoods/$SET_ID.$FIRST.$SECOND
-	sbatch --wait --job-name=fst --dependency=singleton --output=$POP_DIR/logFiles/$SET_ID.realsfs_fst.$FIRST.$SECOND.oe $SCRIPTS_DIR/realsfs_fst.sh $NT "$SAF_DIR/$FIRST.saf.idx $SAF_DIR/$SECOND.saf.idx" $OUT
+	out=$pop_dir/ibd/genotypeLikelihoods/$set_id.$first.$second
+	sbatch --wait --job-name=fst --dependency=singleton --output=$pop_dir/logFiles/$set_id.realsfs_fst.$first.$second.oe $scripts_dir/realsfs_fst.sh $nt "$saf_dir/$first.saf.idx $saf_dir/$second.saf.idx" $out
 	
 	# Write to summary file 
-	echo ${FIRST}_$SECOND $(cat $OUT.fst) >> $POP_DIR/ibd/genotypeLikelihoods/$SET_ID.fst_sumstats.txt
-done < $POP_DIR/ibd/genotypeLikelihoods/pop_combinations.txt
+	echo ${first}_$second $(cat $out.fst) >> $pop_dir/ibd/genotypeLikelihoods/$set_id.fst_sumstats.txt
+done < $pop_dir/ibd/genotypeLikelihoods/pop_combinations.txt
 
 ## Conduct Mantel tests and plot IBD
-GEO_DIST=$POP_DIR/ibd/genotypeLikelihoods/geo_dist.txt # Distance matrix with mean geographic distances between population pairs as estimated with Geographic Distance Matrix Generator v1.2.3 (https://biodiversityinformatics.amnh.org/open_source/gdmg/), with row and column names
-GEN_DIST=$POP_DIR/ibd/genotypeLikelihoods/gen_dist.txt # Distance matrix with weighted pairwise F_ST between populations as estimated with realSFS, with row and column names
-sbatch --output=$POP_DIR/logFiles/$SET_ID.genotypeLikelihoods.ibd.oe $SCRIPTS_DIR/ibd.sh $GEO_DIST $GEN_DIST $POP_DIR/ibd/genotypeLikelihoods/$SET_IT
+geo_dist=$pop_dir/ibd/genotypeLikelihoods/geo_dist.txt # Distance matrix with mean geographic distances between population pairs as estimated with Geographic Distance Matrix Generator v1.2.3 (https://biodiversityinformatics.amnh.org/open_source/gdmg/), with row and column names
+gen_dist=$pop_dir/ibd/genotypeLikelihoods/gen_dist.txt # Distance matrix with weighted pairwise F_ST between populations as estimated with realSFS, with row and column names
+sbatch --output=$pop_dir/logFiles/$set_id.genotypeLikelihoods.ibd.oe $scripts_dir/ibd.sh $geo_dist $gen_dist $pop_dir/ibd/genotypeLikelihoods/$set_id
 
 
 #################################################################
 #### AMOVA ####
 #################################################################
-mkdir -p $POP_DIR/amova
-VCF_IN=$PWORK/$SET_ID/vcf/$SET_ID.populations.snps.08filt.vcf.gz # Filtered input VCF without outgroups and undesired individuals created in vcf_filtering_sub.sh
-SAMPLE_FILE=$POP_DIR/amova/$SET_ID.samples.pops.txt # List with indviduals in first column, populations in second column and major clusters (north/south/central) in third column, without row or column names
-OUT=$POP_DIR/amova/$SET_ID
+mkdir -p $pop_dir/amova
+vcf_in=$PWORK/$set_id/vcf/$set_id.populations.snps.08filt.vcf.gz # Filtered input VCF without outgroups and undesired individuals created in vcf_filtering_sub.sh
+sample_file=$pop_dir/amova/$set_id.samples.pops.txt # List with indviduals in first column, populations in second column and major clusters (north/south/central) in third column, without row or column names
+OUT=$pop_dir/amova/$set_id
 
 ## Submit script for AMOVA
-sbatch --output=$POP_DIR/logFiles/$SET_ID.amova.oe $SCRIPTS_DIR/amova.sh $SCRIPTS_DIR $VCF_IN $SAMPLE_FILE $OUT
+sbatch --output=$pop_dir/logFiles/$set_id.amova.oe $scripts_dir/amova.sh $scripts_dir $vcf_in $sample_file $out

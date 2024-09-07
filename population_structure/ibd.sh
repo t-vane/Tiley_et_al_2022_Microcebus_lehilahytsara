@@ -8,25 +8,25 @@ set -euo pipefail
 ################################################################################
 
 ## Command-line args
-SCRIPT_DIR=$1
-GEO_DIST=$2
-GEN_DIST=$3
-OUT=$4
+scripts_dir=$1
+geo_dist=$2
+gen_dist=$3
+out=$4
 
 ## Report:
 echo -e "\n\n###################################################################"
 date
 echo -e "#### ibd.sh: Starting script."
-echo -e "#### ibd.sh: Directory with scripts: $SCRIPT_DIR"
-echo -e "#### ibd.sh: Geographic distance matrix: $GEO_DIST"
-echo -e "#### ibd.sh: Genetic distance matrix: $GEN_DIST"
-echo -e "#### ibd.sh: Output prefix: $OUT \n\n"
+echo -e "#### ibd.sh: Directory with scripts: $scripts_dir"
+echo -e "#### ibd.sh: Geographic distance matrix: $geo_dist"
+echo -e "#### ibd.sh: Genetic distance matrix: $gen_dist"
+echo -e "#### ibd.sh: Output prefix: $out \n\n"
 
 ################################################################################
 #### CONDUCT MANTEL TEST AND PLOT ISOLATION BY DISTANCE ####
 ################################################################################
 echo -e "#### ibd.sh: Conducting Mantel test and plotting ...\n"
-Rscript $SCRIPTS_DIR/ibd.R $GEO_DIST $GEN_DIST $OUT
+Rscript $scripts_dir/ibd.R $geo_dist $gen_dist $out
 
 ## Report:
 echo -e "\n#### ibd.sh: Done with script."

@@ -10,34 +10,34 @@ set -euo pipefail
 # SAMtools needs to be included in $PATH (v1.11; http://www.htslib.org/)
 
 ## Command-line args:
-MODE=$1
-NT=$2
-BAM_DIR=$3
-IN_FILE=$4
-MINMAPQ=$5
-INDV=$(sed -n "$SLURM_ARRAY_TASK_ID"p $IN_FILE)
+mode=$1
+nt=$2
+bam_dir=$3
+in_file=$4
+minmapq=$5
+indv=$(sed -n "$SLURM_ARRAY_TASK_ID"p $in_file)
 
 ## Report:
 echo -e "\n\n###################################################################"
 date
 echo -e "#### quality_filter.sh: Starting script."
-echo -e "#### quality_filter.sh: Paired-end or single-end: $MODE"
-echo -e "#### quality_filter.sh: Number of threads: $NT"
-echo -e "#### quality_filter.sh: Directory for BAM files: $BAM_DIR"
-echo -e "#### quality_filter.sh: File with individuals: $IN_FILE"
-echo -e "#### quality_filter.sh: Minimum mapping quality for filtering: $MINMAPQ"
-echo -e "#### quality_filter.sh: Individual: $INDV \n\n"
+echo -e "#### quality_filter.sh: Paired-end or single-end: $mode"
+echo -e "#### quality_filter.sh: Number of threads: $nt"
+echo -e "#### quality_filter.sh: Directory for BAM files: $bam_dir"
+echo -e "#### quality_filter.sh: File with individuals: $in_file"
+echo -e "#### quality_filter.sh: Minimum mapping quality for filtering: $minmapq"
+echo -e "#### quality_filter.sh: Individual: $indv \n\n"
 
 ################################################################################
 #### SORT AND FILTER FOR MINIMUM MAPPING QUALITY AND PROPER PAIRING (IF PE) ####
 ################################################################################
-if [[ $MODE == "PE" ]]
+if [[ $mode == "PE" ]]
 then
-	echo -e "#### quality_filter.sh: Minimum mapping quality and proper-pair filtering and sorting for paired-end individual $INDV ...\n"
-	samtools view -bhu -q $MINMAPQ -f 0x2 -@ $NT $BAM_DIR/$INDV.bam | samtools sort -@ $NT -m 15G -O bam > $BAM_DIR/$INDV.MQ$MINMAPQ.pp.bam
-elif [[ $MODE == "SE" ]]
-	echo -e "#### quality_filter.sh: Minimum mapping quality filtering and sorting for single-end individual $INDV ...\n"
-	samtools view -bhu -q $MINMAPQ -@ $NT $BAM_DIR/$INDV.bam | samtools sort -@ $NT -m 15G -O bam > $BAM_DIR/$INDV.MQ$MINMAPQ.bam
+	echo -e "#### quality_filter.sh: Minimum mapping quality and proper-pair filtering and sorting for paired-end individual $indv ...\n"
+	samtools view -bhu -q $minmapq -f 0x2 -@ $nt $bam_dir/$indv.bam | samtools sort -@ $nt -m 15G -O bam > $bam_dir/$indv.MQ$minmapq.pp.bam
+elif [[ $mode == "SE" ]]
+	echo -e "#### quality_filter.sh: Minimum mapping quality filtering and sorting for single-end individual $indv ...\n"
+	samtools view -bhu -q $minmapq -@ $nt $bam_dir/$indv.bam | samtools sort -@ $nt -m 15G -O bam > $bam_dir/$indv.MQ$minmapq.bam
 else
 	echo -e "#### quality_filter.sh: Invalid sequencing mode provided - only PE and SE allowed. ...\n" && exit 1
 fi

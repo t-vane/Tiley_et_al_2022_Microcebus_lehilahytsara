@@ -7,35 +7,35 @@ set -euo pipefail
 #### SET-UP ####
 ################################################################################
 ## Software:
-PCANGSD=/home/nibtve93/software/pcangsd/pcangsd.py # (v1.01; https://github.com/Rosemeis/pcangsd)
+pcangsd=/home/nibtve93/software/pcangsd/pcangsd.py # (v1.01; https://github.com/Rosemeis/pcangsd)
 
 ## Command-line args:
-NT=$1
-BEAGLE=$2
-OUT_DIR=$3
-SCRIPTS_DIR=$4
-IND_FILE=$5
-SET_ID=$6
+nt=$1
+beagle=$2
+out_dir=$3
+scripts_dir=$4
+ind_file=$5
+set_id=$6
 
 ## Report:
 echo -e "\n\n###################################################################"
 date
 echo -e "#### pca.sh: Starting script."
-echo -e "#### pca.sh: Number of threads: $NT"
-echo -e "#### pca.sh: Genotype likelihood file in beagle format: $BEAGLE"
-echo -e "#### pca.sh: Output directory: $OUT_DIR"
-echo -e "#### pca.sh: Directory with scripts: $SCRIPTS_DIR"
-echo -e "#### pca.sh: File that maps individuals to populations: $IND_FILE"
-echo -e "#### pca.sh: Set ID: $SET_ID \n\n"
+echo -e "#### pca.sh: Number of threads: $nt"
+echo -e "#### pca.sh: Genotype likelihood file in beagle format: $beagle"
+echo -e "#### pca.sh: Output directory: $out_dir"
+echo -e "#### pca.sh: Directory with scripts: $scripts_dir"
+echo -e "#### pca.sh: File that maps individuals to populations: $ind_file"
+echo -e "#### pca.sh: Set ID: $set_id \n\n"
 
 ################################################################################
 #### CONDUCT PRINCIPAL COMPONENT ANALYSIS ####
 ################################################################################
 echo -e "#### pca.sh: Estimating covariance matrix ...\n"
-python $PCANGSD -threads $NT -beagle $BEAGLE -out $OUT_DIR/cov_matrix.txt -tree
+python $pcangsd -threads $nt -beagle $beagle -out $out_dir/cov_matrix.txt -tree
 
 echo -e "#### pca.sh: Obtaining principal components and plotting ...\n"
-Rscript $SCRIPTS_DIR/pca.R $OUT_DIR $OUT_DIR/cov_matrix.txt $IND_FILE $SET_ID
+Rscript $scripts_dir/pca.R $out_dir $out_dir/cov_matrix.txt $ind_file $set_id
 
 echo -e "\n#### pca.sh: Done with script."
 date

@@ -8,58 +8,58 @@ set -euo pipefail
 ################################################################################
 ## Software:
 # VCFtools needs to be included in $PATH (v0.1.17; https://vcftools.github.io/index.html)
-AMAS=/home/nibtve93/software/AMAS/amas/AMAS.py # (https://github.com/marekborowiec/AMAS)
-ASCBIAS=/home/nibtve93/software/raxml_ascbias/ascbias.py # (https://github.com/btmartin721/raxml_ascbias/blob/master/ascbias.py)
+amas=/home/nibtve93/software/AMAS/amas/AMAS.py # (https://github.com/marekborowiec/AMAS)
+ascbias=/home/nibtve93/software/raxml_ascbias/ascbias.py # (https://github.com/btmartin721/raxml_ascbias/blob/master/ascbias.py)
 
 ## Command-line args:
-SCRIPTS_DIR=$1
-VCF_IN=$2
-OUT_DIR=$3
-FORMAT=$4
+scripts_dir=$1
+vcf_in=$2
+out_dir=$3
+format=$4
 
 ## Report:
 echo -e "\n\n###################################################################"
 date
 echo -e "#### vcf_convert.sh: Starting script."
-echo -e "#### vcf_convert.sh: Directory with vcf_tab_to_fasta_alignment script: $SCRIPTS_DIR"
-echo -e "#### vcf_convert.sh: Input VCF file: $VCF_IN"
-echo -e "#### vcf_convert.sh: Output directory: OUT_DIR"
-echo -e "#### vcf_convert.sh: Output format of alignment: $FORMAT \n\n"
+echo -e "#### vcf_convert.sh: Directory with vcf_tab_to_fasta_alignment script: $scripts_dir"
+echo -e "#### vcf_convert.sh: Input VCF file: $vcf_in"
+echo -e "#### vcf_convert.sh: Output directory: $out_dir"
+echo -e "#### vcf_convert.sh: Output format of alignment: $format \n\n"
 
 ################################################################################
 #### CONVERT VCF TO PHYLIP FORMAT AND CALCULATE STATISTICS ####
 ################################################################################
-PREFIX=$(basename $IN_FILE .vcf)
+PREFIX=$(basename $vcf_in .vcf)
 
-if [[ $FORMAT == phylip ]]
+if [[ $format == phylip ]]
 then
-	SUFFIX=phy
-elif [[ $FORMAT == nexus ]]
+	suffix=phy
+elif [[ $format == nexus ]]
 then
-	SUFFIX=nex
+	suffix=nex
 else
 	echo -e "#### vcf_convert.sh: Invalid format provided - only phylip and nexus accepted. ...\n" && exit 1
 fi
 
 echo -e "#### vcf_convert.sh: Creating TAB file from VCF ...\n"
-vcf-to-tab < $VCF_IN > $OUT_DIR/$PREFIX.tab
+vcf-to-tab < $vcf_in > $out_dir/$prefix.tab
 
 echo -e "#### vcf_convert.sh: Converting TAB file to FASTA format ...\n"
-perl $SCRIPTS_DIR/vcf_tab_to_fasta_alignment_TVE.pl -i $OUT_DIR/$PREFIX.tab > $OUT_DIR/$PREFIX.fasta
+perl $scripts_dir/vcf_tab_to_fasta_alignment_TVE.pl -i $out_dir/$prefix.tab > $out_dir/$prefix.fasta
 
-echo -e "#### vcf_convert.sh: Converting FASTA file to $FORMAT format ...\n"
-python $AMAS convert -i $OUT_DIR/$PREFIX.fasta -f fasta -u $FORMAT -d dna
-mv $OUT_DIR/$PREFIX.fasta-out.$SUFFIX $OUT_DIR/$PREFIX.$SUFFIX
+echo -e "#### vcf_convert.sh: Converting FASTA file to $format format ...\n"
+python $amas convert -i $out_dir/$prefix.fasta -f fasta -u $format -d dna
+mv $out_dir/$prefix.fasta-out.$suffix $out_dir/$prefix.$suffix
 
 echo -e "#### vcf_convert.sh: Removing invariant sites ...\n"
-python $ASCBIAS -p $OUT_DIR/$PREFIX.$SUFFIX -o $OUT_DIR/$PREFIX.noinv.$SUFFIX
+python $ascbias -p $out_dir/$prefix.$suffix -o $out_dir/$prefix.noinv.$suffix
 
 echo -e "#### vcf_convert.sh: Calculating alignment statistics ...\n"
-python $AMAS summary -f $FORMAT -d dna -i $OUT_DIR/$PREFIX.noinv.$SUFFIX -o $OUT_DIR/$PREFIX.noinv.$SUFFIX.summary
+python $amas summary -f $format -d dna -i $out_dir/$prefix.noinv.$suffix -o $out_dir/$prefix.noinv.$suffix.summary
 
 echo -e "#### vcf_convert.sh: Writing partitions file ...\n"
-ALIGN_LENGTH=$(sed -n 2p $OUT_DIR/$PREFIX.noinv.$SUFFIX.summary | cut -f3)
-echo "[asc~$OUT_DIR/$PREFIX.noinv.$SUFFIX.stamatakis], ASC_DNA, p1=1-$ALIGN_LENGTH" > $OUT_DIR/$PREFIX.noinv.$SUFFIX.partitions
+align_length=$(sed -n 2p $out_dir/$prefix.noinv.$suffix.summary | cut -f3)
+echo "[asc~$out_dir/$prefix.noinv.$suffix.stamatakis], ASC_DNA, p1=1-$align_length" > $out_dir/$prefix.noinv.$suffix.partitions
 
 ## Report:
 echo -e "\n#### vcf_convert.sh: Done with script."
