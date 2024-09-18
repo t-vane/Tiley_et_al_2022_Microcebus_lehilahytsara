@@ -17,7 +17,7 @@ mkdir -p $phyl_dir/ml
 
 ## Convert VCF file to PHYLIP format and calculate basic alignment statistics
 format=phylip # Output format of alignment (phylip or nexus)
-sbatch --job-name=ml_inference --output=$phyl_dir/logFiles/vcf_convert.$format.$set_id.oe $scripts_dir/vcf_convert.sh $scripts_dir $vcf_in $phyl_dir/ml $format
+sbatch --job-name=ml_inference --output=$phyl_dir/logFiles/vcf_convert.ml.$format.$set_id.oe $scripts_dir/vcf_convert.sh $scripts_dir $vcf_in $phyl_dir/ml $format
 
 ## Run phylogenetic inference with ascertainment bias correction in RAxML-NG
 nt=80
@@ -35,7 +35,7 @@ vcftools --vcf $vcf_in --thin 10000 --recode --recode-INFO-all --stdout > $(dirn
 
 ## Convert VCF file to NEXUS format and calculate basic alignment statistics
 format=nexus # Output format of alignment (phylip or nexus)
-sbatch --wait --output=$phyl_dir/logFiles/vcf_convert.$format.$set_id.oe $scripts_dir/vcf_convert.sh $scripts_dir $vcf_in $phyl_dir/quartet $format
+sbatch --wait --output=$phyl_dir/logFiles/vcf_convert.quartet.$format.$set_id.oe $scripts_dir/vcf_convert.sh $scripts_dir $(dirname $vcf_in)/$(basename $vcf_in .vcf).thin10k.vcf $phyl_dir/quartet $format
 
 ## Create taxon partitions block files
 # For population assignment, the file has to be created manually
@@ -58,7 +58,7 @@ seed=$RANDOM
 echo "BEGIN PAUP;" > $phyl_dir/quartet/$set_id.paup.population.nex
 echo -e "\toutgroup SPECIES.Mmurinus;" >> $phyl_dir/quartet/$set_id.paup.population.nex
 echo -e "\tset root=outgroup outroot=monophyl;" >> $phyl_dir/quartet/$set_id.paup.population.nex
-echo -e "\tsvdq nthreads=$nt evalQuartets=all taxpartition=SPECIES bootstrap=standard seed=${SEED};" >> $phyl_dir/quartet/$set_id.paup.population.nex
+echo -e "\tsvdq nthreads=$nt evalQuartets=all taxpartition=SPECIES bootstrap=standard seed=$seed;" >> $phyl_dir/quartet/$set_id.paup.population.nex
 echo -e "\tsavetrees format=Newick file=$phyl_dir/quartet/$set_id.populations.snps.07filt.population.svdq.tre savebootp=nodelabels;" >> $phyl_dir/quartet/$set_id.paup.population.nex
 echo -e "\tquit;" >> $phyl_dir/quartet/$set_id.paup.population.nex
 echo "END;" >> $phyl_dir/quartet/$set_id.paup.population.nex
@@ -66,7 +66,7 @@ echo "END;" >> $phyl_dir/quartet/$set_id.paup.population.nex
 echo "BEGIN PAUP;" > $phyl_dir/quartet/$set_id.paup.individual.nex
 echo -e "\toutgroup SPECIES.Mmur_RMR44 SPECIES.Mmur_RMR45 SPECIES.Mmur_RMR49;" >> $phyl_dir/quartet/$set_id.paup.individual.nex
 echo -e "\tset root=outgroup outroot=monophyl;" >> $phyl_dir/quartet/$set_id.paup.individual.nex
-echo -e "\tsvdq nthreads=$nt evalQuartets=all taxpartition=SPECIES bootstrap=standard seed=${SEED};" >> $phyl_dir/quartet/$set_id.paup.individual.nex
+echo -e "\tsvdq nthreads=$nt evalQuartets=all taxpartition=SPECIES bootstrap=standard seed=$seed;" >> $phyl_dir/quartet/$set_id.paup.individual.nex
 echo -e "\tsavetrees format=Newick file=$phyl_dir/quartet/$set_id.populations.snps.07filt.individual.svdq.tre savebootp=nodelabels;" >> $phyl_dir/quartet/$set_id.paup.individual.nex
 echo -e "\tquit;" >> $phyl_dir/quartet/$set_id.paup.individual.nex
 echo "END;" >> $phyl_dir/quartet/$set_id.paup.individual.nex
