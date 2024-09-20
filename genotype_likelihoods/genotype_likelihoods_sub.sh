@@ -27,8 +27,7 @@ do
 	in_file=$angsd_dir/angsd_$i.txt # List of samples (without file extensions) that shall be included for global genotype likelihood estimation, separated by sequencing mode (PE or SE)
 	no_inds=$(cat $in_file | wc -l)
 
-	[[ $i == PE ]] && sbatch --array=1-$no_inds --output=$angsd_dir/logFiles/bamHits.$set_id.%A_%a.oe $scripts_dir/coverage.sh $i $in_file $bam_dir $angsd_dir/bamHits
-	[[ $i == SE ]] && sbatch --wait --array=1-$no_inds --output=$angsd_dir/logFiles/bamHits.$set_id.%A_%a.oe $scripts_dir/coverage.sh $i $in_file $bam_dir $angsd_dir/bamHits
+	sbatch --wait --array=1-$no_inds --output=$angsd_dir/logFiles/bamHits.$set_id.%A_%a.oe $scripts_dir/coverage.sh $i $in_file $bam_dir $angsd_dir/bamHits
 done
 
 ## Estimate and plot coverage distributions for each individual
