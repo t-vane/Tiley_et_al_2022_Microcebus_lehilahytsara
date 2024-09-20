@@ -31,7 +31,7 @@ out_dir=$PWORK/bamFiles/$set_id
 mkdir -p $out_dir/logFiles
 
 ## Submit scripts for reference mapping, sorting, filtering, extraction of genomic regions and header cleaning
-for i in PE SE
+for i in pe se
 do
 	in_file=$out_dir/map_$i.txt # List of samples (without file extensions) for which reference alignment shall be conducted
 	no_inds=$(cat $in_file | wc -l)
@@ -44,7 +44,7 @@ do
 	sbatch --job-name=map_filter_pip --dependency=singleton --array=1-$no_inds --output=$out_dir/logFiles/quality_filter_$i.%A_%a.$set_id.oe $scripts_dir/quality_filter.sh $i $nt $out_dir $in_file $minmapq
 	
 	# Deduplicate 
-	[[ $i == PE ]] && sbatch --job-name=map_filter_pip --dependency=singleton --array=1-$no_inds --output=$out_dir/logFiles/deduplicate_$i.%A_%a.$set_id.oe $scripts_dir/deduplicate.sh $out_dir $in_file $minmapq
+	[[ $i == pe ]] && sbatch --job-name=map_filter_pip --dependency=singleton --array=1-$no_inds --output=$out_dir/logFiles/deduplicate_$i.%A_%a.$set_id.oe $scripts_dir/deduplicate.sh $out_dir $in_file $minmapq
 	
 	# Extract genomic regions
 	bed=$out_dir/regionFile_autosomes.bed # BED file with genomic regions that shall be extracted
