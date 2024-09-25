@@ -56,7 +56,7 @@ nt=80
 for k in $(seq 1 $clusters)
 do
 	jid=$(sbatch --array=1-$repeats --output=$pop_dir/logFiles/ngsadmix$k.$set_id.%A_%a.oe $scripts_dir/ngsadmix.sh $nt $k $beagle $pop_dir/ngsadmix/genotypeLikelihoods $minind $set_id)
-	declare RUNID_$k=${jid##* }
+	declare runid_$k=${jid##* }
 done
 
 
@@ -67,8 +67,8 @@ for k in $(seq 1 $clusters);
 do
 	for seed in $(seq 1 $repeats)
 	do
-		[[ $k == 1 ]] && [[ $seed == 1 ]] && varname=RUNID_$k && jid=$(sbatch --account=nib00015 --dependency=afterok:${!varname} --output=$pop_dir/logFiles/print_likes.$set_id.oe $scripts_dir/print_likes.sh $pop_dir/ngsadmix/genotypeLikelihoods/$set_id.K$k.seed$seed.log $like_file)
-		[[ $k != 1 ]] || [[ $seed != 1 ]] && varname=RUNID_$k && jid=$(sbatch --account=nib00015 --dependency=afterok:${!varname}:${jid##* } --output=$pop_dir/logFiles/print_likes.$set_id.oe $scripts_dir/print_likes.sh $pop_dir/ngsadmix/genotypeLikelihoods/$set_id.K$k.seed$seed.log $like_file)
+		[[ $k == 1 ]] && [[ $seed == 1 ]] && varname=runid_$k && jid=$(sbatch --account=nib00015 --dependency=afterok:${!varname} --output=$pop_dir/logFiles/print_likes.$set_id.oe $scripts_dir/print_likes.sh $pop_dir/ngsadmix/genotypeLikelihoods/$set_id.K$k.seed$seed.log $like_file)
+		[[ $k != 1 ]] || [[ $seed != 1 ]] && varname=runid_$k && jid=$(sbatch --account=nib00015 --dependency=afterok:${!varname}:${jid##* } --output=$pop_dir/logFiles/print_likes.$set_id.oe $scripts_dir/print_likes.sh $pop_dir/ngsadmix/genotypeLikelihoods/$set_id.K$k.seed$seed.log $like_file)
 	done
 done
 
@@ -77,7 +77,7 @@ ind_file=$pop_dir/$set_id.txt # File with individual IDs in first columns and po
 
 until [[ $(cat $like_file | wc -l) == $(( $clusters*$repeats )) ]]
 do
-	sleep 5
+	sleep 5m
 done
 
 sbatch --output=$pop_dir/logFiles/plot_ngsadmix.$set_id.oe $scripts_dir/plot_ngsadmix.sh $scripts_dir $pop_dir/ngsadmix/genotypeLikelihoods $like_file $ind_file $set_id
