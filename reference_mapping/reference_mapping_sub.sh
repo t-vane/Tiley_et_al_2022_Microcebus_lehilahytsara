@@ -38,17 +38,17 @@ do
 	minmapq=20
 	
 	# Reference mapping, filtering and extraction of genomic regions
-	sbatch --job-name=map_filter_pip --array=1-$no_inds --output=$out_dir/logFiles/reference_mapping_$i.%A_%a.$set_id.oe $scripts_dir/reference_mapping.sh $i $nt $reference_dir/$bwa_index $in_dir $out_dir $in_file
+	sbatch --job-name=map_filter_pip_$i --array=1-$no_inds --output=$out_dir/logFiles/reference_mapping_$i.%A_%a.$set_id.oe $scripts_dir/reference_mapping.sh $i $nt $reference_dir/$bwa_index $in_dir $out_dir $in_file
 	
 	# Sort and quality filter
-	sbatch --job-name=map_filter_pip --dependency=singleton --array=1-$no_inds --output=$out_dir/logFiles/quality_filter_$i.%A_%a.$set_id.oe $scripts_dir/quality_filter.sh $i $nt $out_dir $in_file $minmapq
+	sbatch --job-name=map_filter_pip_$i --dependency=singleton --array=1-$no_inds --output=$out_dir/logFiles/quality_filter_$i.%A_%a.$set_id.oe $scripts_dir/quality_filter.sh $i $nt $out_dir $in_file $minmapq
 	
 	# Deduplicate 
-	[[ $i == pe ]] && sbatch --job-name=map_filter_pip --dependency=singleton --array=1-$no_inds --output=$out_dir/logFiles/deduplicate_$i.%A_%a.$set_id.oe $scripts_dir/deduplicate.sh $out_dir $in_file $minmapq
+	[[ $i == pe ]] && sbatch --job-name=map_filter_pip_$i --dependency=singleton --array=1-$no_inds --output=$out_dir/logFiles/deduplicate_$i.%A_%a.$set_id.oe $scripts_dir/deduplicate.sh $out_dir $in_file $minmapq
 	
 	# Extract genomic regions
 	bed=$out_dir/regionFile_autosomes.bed # BED file with genomic regions that shall be extracted
 	exclude="NW_|NC_028718.1|NC_033692.1" # String of chromosomes that are no longer represented (separator: "|")
 	suffix=auto # Suffix for naming of final BAM files
-	sbatch --job-name=map_filter_pip --dependency=singleton --array=1-$no_inds --output=$out_dir/logFiles/extract_regions_$i.%A_%a.$set_id.oe $scripts_dir/extract_regions.sh $i $out_dir $in_file $minmapq $bed "$exclude" $suffix
+	sbatch --job-name=map_filter_pip_$i --dependency=singleton --array=1-$no_inds --output=$out_dir/logFiles/extract_regions_$i.%A_%a.$set_id.oe $scripts_dir/extract_regions.sh $i $out_dir $in_file $minmapq $bed "$exclude" $suffix
 done
