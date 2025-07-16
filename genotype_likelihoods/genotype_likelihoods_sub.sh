@@ -27,11 +27,11 @@ do
 	in_file=$angsd_dir/angsd_$i.txt # List of samples (without file extensions) that shall be included for global genotype likelihood estimation, separated by sequencing mode (PE or SE)
 	no_inds=$(cat $in_file | wc -l)
 
-	sbatch --wait --array=1-$no_inds --output=$angsd_dir/logFiles/bamHits.$set_id.%A_%a.oe $scripts_dir/coverage.sh $i $in_file $bam_dir $angsd_dir/bamHits
+	sbatch --array=1-$no_inds --output=$angsd_dir/logFiles/bamHits.$set_id.%A_%a.oe $scripts_dir/coverage.sh $i $in_file $bam_dir $angsd_dir/bamHits
 done
 
 ## Estimate and plot coverage distributions for each individual
-sbatch --wait --output=$angsd_dir/logFiles/cov_plot.$set_id.oe $scripts_dir/cov_plot.sh $scripts_dir $in_file_all $angsd_dir/bamHits $set_id
+sbatch --output=$angsd_dir/logFiles/cov_plot.$set_id.oe $scripts_dir/cov_plot.sh $scripts_dir $in_file_all $angsd_dir/bamHits $set_id
 
 ## Set thresholds for angsd
 mindepthind=$(cat $angsd_dir/bamHits/statistics/$set_id.minmax.txt | cut -d " " -f2 | sort -n | head -1) # Minimum depth per individual

@@ -66,23 +66,12 @@ for k in $(seq 1 $clusters);
 do
 	for seed in $(seq 1 $repeats)
 	do
-		until [ -f $pop_dir/ngsadmix/genotypeLikelihoods/$set_id.K$k.seed$seed.qopt ]
-		do
-			sleep 5m
-		done
-		
 		sbatch --account=nib00015 --output=$pop_dir/logFiles/print_likes.$set_id.oe $scripts_dir/print_likes.sh $pop_dir/ngsadmix/genotypeLikelihoods/$set_id.K$k.seed$seed.log $like_file
 	done
 done
 
 ## Plot results
 ind_file=$pop_dir/$set_id.txt # File with individual IDs in first columns and population assignments in second column
-
-until [[ $(cat $like_file | wc -l) == $(( $clusters*$repeats )) ]]
-do
-	sleep 5m
-done
-
 sbatch --output=$pop_dir/logFiles/plot_ngsadmix.$set_id.oe $scripts_dir/plot_ngsadmix.sh $scripts_dir $pop_dir/ngsadmix/genotypeLikelihoods $like_file $ind_file $set_id
 
 

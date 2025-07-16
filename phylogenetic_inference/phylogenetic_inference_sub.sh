@@ -17,13 +17,13 @@ mkdir -p $phyl_dir/ml
 
 ## Convert VCF file to PHYLIP format and calculate basic alignment statistics
 format=phylip # Output format of alignment (phylip or nexus)
-sbatch --job-name=ml_inference --output=$phyl_dir/logFiles/vcf_convert.ml.$format.$set_id.oe $scripts_dir/vcf_convert.sh $scripts_dir $vcf_in $phyl_dir/ml $format
+sbatch --output=$phyl_dir/logFiles/vcf_convert.ml.$format.$set_id.oe $scripts_dir/vcf_convert.sh $scripts_dir $vcf_in $phyl_dir/ml $format
 
 ## Run phylogenetic inference with ascertainment bias correction in RAxML-NG
 nt=80
 bootstrap=100 # Number of bootstrap replicates
 outgroup="Mmur_RMR44,Mmur_RMR45,Mmur_RMR49" # Outgroup individuals in alignment file
-sbatch --job-name=ml_inference --dependency=singleton --output=$phyl_dir/logFiles/raxml_asc.$set_id.oe $scripts_dir/raxml_asc.sh $nt $bootstrap $outgroup $phyl_dir/ml/populations.snps.07filt.noinv.phy $phyl_dir/ml/populations.snps.07filt.noinv.tre
+sbatch --output=$phyl_dir/logFiles/raxml_asc.$set_id.oe $scripts_dir/raxml_asc.sh $nt $bootstrap $outgroup $phyl_dir/ml/populations.snps.07filt.noinv.phy $phyl_dir/ml/populations.snps.07filt.noinv.tre
 
 #################################################################
 #### 2 QUARTET-BASED INFERENCE FOR INDIVIDUAL AND POPULATION ASSIGNMENT ####
@@ -35,7 +35,7 @@ vcftools --vcf $vcf_in --thin 10000 --recode --recode-INFO-all --stdout > $(dirn
 
 ## Convert VCF file to NEXUS format and calculate basic alignment statistics
 format=nexus # Output format of alignment (phylip or nexus)
-sbatch --wait --output=$phyl_dir/logFiles/vcf_convert.quartet.$format.$set_id.oe $scripts_dir/vcf_convert.sh $scripts_dir $(dirname $vcf_in)/$(basename $vcf_in .vcf).thin10k.vcf $phyl_dir/quartet $format
+sbatch --output=$phyl_dir/logFiles/vcf_convert.quartet.$format.$set_id.oe $scripts_dir/vcf_convert.sh $scripts_dir $(dirname $vcf_in)/$(basename $vcf_in .vcf).thin10k.vcf $phyl_dir/quartet $format
 
 ## Create taxon partitions block files
 # For population assignment, the file has to be created manually
@@ -75,7 +75,7 @@ echo "END;" >> $phyl_dir/quartet/$set_id.paup.individual.nex
 for i in population individual
 do
 	cat $phyl_dir/quartet/populations.snps.07filt.thin10k.noinv.nex $phyl_dir/quartet/$set_id.taxPartitions.$i.nex $phyl_dir/quartet/$set_id.paup.$i.nex > $phyl_dir/quartet/$set_id.paup.$i.concat.nex
-	sbatch --job-name=quartet_inference --output=$phyl_dir/logFiles/svdq.$set_id.oe $scripts_dir/svdq.sh $phyl_dir/quartet/$set_id.paup.$i.concat.nex $phyl_dir/quartet/$set_id.paup.$i.concat.nex.log
+	sbatch --output=$phyl_dir/logFiles/svdq.$set_id.oe $scripts_dir/svdq.sh $phyl_dir/quartet/$set_id.paup.$i.concat.nex $phyl_dir/quartet/$set_id.paup.$i.concat.nex.log
 done
 
 #################################################################
@@ -92,7 +92,7 @@ for i in $constraints
 do
 	constraint_file=$i.constraint.nwk
 	command="-g $constraint_file"
-	sbatch --dependency=afterok:$(squeue --noheader --format %i --name ml_inference):$(squeue --noheader --format %i --name quartet_inference) --output=$phyl_dir/logFiles/raxml_asc.$set_id.constraint.$i.oe $scripts_dir/raxml_asc.sh \
+	sbatch --output=$phyl_dir/logFiles/raxml_asc.$set_id.constraint.$i.oe $scripts_dir/raxml_asc.sh \
 		$nt $bootstrap $outgroup $phyl_dir/ml/populations.snps.07filt.noinv.phy $phyl_dir/au_test/populations.snps.07filt.noinv.$i.tre "$command"
 done
 

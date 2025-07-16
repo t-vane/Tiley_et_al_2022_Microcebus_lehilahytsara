@@ -15,9 +15,9 @@ mkdir -p $out_dir/logFiles
 mkdir -p $out_dir/populations
 
 ## Create stacks with gstacks
-sbatch --job-name=stacks --output=$out_dir/logFiles/gstacks.$set_id.oe $scripts_dir/gstacks.sh $nt $bam_dir $out_dir $popmap 
+sbatch --output=$out_dir/logFiles/gstacks.$set_id.oe $scripts_dir/gstacks.sh $nt $bam_dir $out_dir $popmap 
 
 ## Extract VCF file with populations
 filters="-p 1 -r 0.75"
 output="--vcf"
-sbatch --job-name=stacks --dependency=singleton --output=$out_dir/logFiles/populations.$set_id.oe $scripts_dir/populations.sh $out_dir $out_dir/populations $popmap $nt "$filters" "$output"
+sbatch --output=$out_dir/logFiles/populations.$set_id.oe $scripts_dir/populations.sh $out_dir $out_dir/populations $popmap $nt "$filters" "$output"
