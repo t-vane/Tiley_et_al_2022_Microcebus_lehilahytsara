@@ -9,13 +9,13 @@ set_id=lehilahytsara
 bam_dir=$PWORK/bamFiles/$set_id
 out_dir=$PWORK/$set_id/stacks
 popmap=$out_dir/$set_id.popmap # List of samples included in genotyping
-suffix=auto	# Suffix for final BAM files (see scripts for reference mapping)
+suffix=auto # Suffix for final BAM files (see scripts for reference mapping)
 
 mkdir -p $out_dir/logFiles
 mkdir -p $out_dir/populations
 
 ## Create stacks with gstacks
-sbatch --output=$out_dir/logFiles/gstacks.$set_id.oe $scripts_dir/gstacks.sh $nt $bam_dir $out_dir $popmap 
+sbatch --output=$out_dir/logFiles/gstacks.$set_id.oe $scripts_dir/gstacks.sh $nt $bam_dir $out_dir $popmap $suffix
 
 ## Extract VCF file with populations
 filters="-p 1 -r 0.75"

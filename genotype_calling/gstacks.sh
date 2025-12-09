@@ -33,7 +33,7 @@ echo -e "#### gstacks.sh: Suffix for BAM files: $suffix \n\n"
 #### CREATE STACKS WITH GSTACKS ####
 ################################################################################
 echo -e "#### gstacks.sh: Creating stacks with gstacks for individuals in $popmap ...\n"
-gstacks -t $nt -I $in_dir -O $out_dir -M $popmap -S $suffix.bam
+gstacks -t $nt -I $in_dir -O $out_dir -M $popmap -S .$suffix.bam
 
 ## Report:
 echo -e "\n#### gstacks.sh: Done with script."
